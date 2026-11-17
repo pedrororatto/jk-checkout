@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cursos — Centro de Estudos John Knox
 
-## Getting Started
+Carrinho de cursos: a pessoa escolhe vários cursos e paga tudo em um único checkout da Eduzz (API de carrinho do Checkout Sun). A Eduzz entrega os cursos no AlpaClass pela integração já existente nos produtos.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # preencha as variáveis
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Variáveis de ambiente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variável | Descrição |
+| --- | --- |
+| `EDUZZ_TOKEN` | Access token do app no console.eduzz.com (conta John Knox). **Só servidor**, nunca use prefixo `NEXT_PUBLIC_`. |
+| `EDUZZ_API_BASE` | `https://api.eduzz.com` |
+| `SCHOOL_URL` | `https://johnknoxonline.alpaclass.com` |
+| `NEXT_PUBLIC_SITE_URL` | URL pública do site, sem barra final (usada no `returnUrl` e `postbackUrl`). |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Habilitar um curso novo
 
-## Learn More
+1. Confirme no admin do AlpaClass que o produto da Eduzz está vinculado ao curso correto (faça uma compra de teste).
+2. Em `src/data/courses.ts`, adicione/edite a linha com o **ID numérico do MyEduzz** (ex. `3143464`, não o código do link de checkout), a categoria e `enabled: true` (`on(...)`).
+3. Nome e preço vêm da API da Eduzz (cache de 1h). O produto precisa estar `active` e com preço > 0.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy na Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Importe o repositório na Vercel (framework Next.js detectado automaticamente).
+2. Em *Settings → Environment Variables*, cadastre as quatro variáveis acima.
+3. Faça o deploy e confira `NEXT_PUBLIC_SITE_URL` com o domínio final (alterá-la exige novo build).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Rotas
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `POST /api/checkout` — `{ productIds: string[] }` → `{ paymentUrl }`. Preço sempre vem da Eduzz, nunca do navegador.
+- `POST /api/eduzz/postback` — só registra em log o que chegar.
+- `/obrigado` — instruções de acesso pós-compra.
